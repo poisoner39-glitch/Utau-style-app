@@ -1,0 +1,484 @@
+<!-- ... existing code ... -->
+    <!-- Playback Controls & BPM -->
+    <div class="flex items-center space-x-3 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+      <button id="btn-stop" class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition" title="Stop & Rewind">
+        <i data-lucide="square" class="w-4 h-4 fill-current"></i>
+      </button>
+      <button id="btn-play" class="p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md transition shadow-md shadow-indigo-600/30" title="Play / Pause">
+        <i data-lucide="play" id="play-icon" class="w-4 h-4 fill-current"></i>
+      </button>
+
+      <div class="h-4 w-px bg-slate-800 mx-1"></div>
+
+      <!-- BPM Input -->
+      <div class="flex items-center space-x-2 text-xs text-slate-400">
+        <label for="bpm-input" class="font-mono">BPM</label>
+        <input type="number" id="bpm-input" value="120" min="40" max="240" class="w-16 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-center text-slate-200 font-mono focus:outline-none focus:border-indigo-500">
+      </div>
+
+      <div class="h-4 w-px bg-slate-800 mx-1"></div>
+
+      <!-- Quantize Snap Selector -->
+      <div class="flex items-center space-x-1 text-xs text-slate-400">
+        <span class="font-mono">Snap</span>
+        <select id="quantize-select" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200 font-mono focus:outline-none focus:border-indigo-500">
+          <option value="1">1/4 (Beat)</option>
+          <option value="0.5" selected>1/8 Note</option>
+          <option value="0.25">1/16 Note</option>
+          <option value="0.125">1/32 Note</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Action Toolbar & Points / Ad System -->
+    <div class="flex items-center space-x-2">
+      <!-- Points / Rewards Counter Badge -->
+      <div class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-md text-amber-400 text-xs font-bold font-mono">
+        <i data-lucide="coins" class="w-4 h-4 text-amber-400"></i>
+        <span id="user-points-display">100</span> PTS
+      </div>
+
+      <!-- Earn Points Button -->
+      <button id="btn-watch-ad" class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-md text-xs font-medium transition shadow-md shadow-amber-600/20">
+        <i data-lucide="tv" class="w-3.5 h-3.5"></i>
+        <span>Watch Ad (+50 PTS)</span>
+      </button>
+
+      <div class="h-4 w-px bg-slate-800 mx-1"></div>
+
+      <!-- Voicebank Selector Button -->
+      <button id="btn-open-vb" class="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-md text-xs font-medium transition">
+        <img id="vb-header-avatar" src="https://placehold.co/40x40/6366f1/ffffff?text=UTAU" class="w-4 h-4 rounded-full object-cover">
+        <span id="vb-header-name">Default Synth VB</span>
+        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+      </button>
+
+      <!-- Oto Editor Tab Button -->
+      <button id="btn-toggle-oto" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-md text-xs font-medium transition">
+        <i data-lucide="sliders" class="w-3.5 h-3.5 text-indigo-400"></i>
+        <span>oto.ini Editor</span>
+      </button>
+
+      <!-- Render WAV -->
+      <button id="btn-export-wav" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-medium transition shadow-md shadow-emerald-600/20">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+        <span>Render WAV</span>
+      </button>
+      
+      <button id="btn-save-project" class="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded transition" title="Save Project JSON">
+        <i data-lucide="save" class="w-4 h-4"></i>
+      </button>
+      <button id="btn-load-project" class="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded transition" title="Load Project JSON">
+        <i data-lucide="folder-open" class="w-4 h-4"></i>
+      </button>
+      <input type="file" id="input-project-file" accept=".json" class="hidden">
+    </div>
+  </header>
+<!-- ... existing code ... -->
+        <!-- Left: Phoneme List & Voicebank Info -->
+        <div class="w-80 flex flex-col bg-slate-900 border border-slate-800 rounded-xl p-4 overflow-hidden">
+          <!-- Voicebank Card -->
+          <div class="flex items-center space-x-3 p-3 bg-slate-950 rounded-lg border border-slate-800 mb-4">
+            <img id="vb-modal-avatar" src="https://placehold.co/40x40/6366f1/ffffff?text=UTAU" class="w-12 h-12 rounded-md object-cover border border-slate-700">
+            <div class="overflow-hidden flex-1">
+              <h3 id="vb-modal-name" class="font-bold text-sm text-slate-200 truncate">Default Web Synth</h3>
+              <p id="vb-modal-author" class="text-xs text-slate-400 truncate">By SynthEngine</p>
+            </div>
+          </div>
+
+          <!-- Custom Voicebank Action Buttons -->
+          <div class="grid grid-cols-2 gap-2 mb-4">
+            <label class="flex items-center justify-center gap-1.5 py-2 px-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold cursor-pointer transition">
+              <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
+              Import Files
+              <input type="file" id="input-vb-files" multiple accept="audio/wav,audio/mp3,.ini,text/plain" class="hidden">
+            </label>
+
+            <!-- Package & Export Custom Voicebank -->
+            <button id="btn-export-vb-package" class="flex items-center justify-center gap-1.5 py-2 px-2 bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold transition">
+              <i data-lucide="package-check" class="w-3.5 h-3.5"></i>
+              Export VB Package
+            </button>
+          </div>
+
+          <!-- Phoneme List Header -->
+          <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-between">
+            <span>Phonemes / Samples</span>
+            <span id="phoneme-count-badge" class="text-indigo-400">0 loaded</span>
+          </div>
+<!-- ... existing code ... -->
+    <!-- Voicebank Manager & Points Marketplace Drawer -->
+    <div id="vb-manager-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-2xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="store" class="w-5 h-5 text-indigo-400"></i> Voicebank Library & Marketplace
+            </h3>
+            <p class="text-xs text-slate-400">Unlock custom community voicebanks using Points or manage local voicebanks</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-md text-amber-400 text-xs font-bold font-mono">
+              <i data-lucide="coins" class="w-3.5 h-3.5"></i>
+              <span class="user-points-val">100</span> PTS
+            </div>
+            <button id="btn-close-vb-modal" class="text-slate-400 hover:text-white">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="vb-list-container" class="space-y-3 mb-4 flex-1 overflow-y-auto pr-1">
+          <!-- Voicebank cards populated here -->
+        </div>
+
+        <div class="flex justify-between items-center pt-3 border-t border-slate-800">
+          <button id="btn-trigger-import" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-2 border border-slate-700">
+            <i data-lucide="upload" class="w-4 h-4 text-indigo-400"></i> Import Local .WAV / oto.ini
+          </button>
+          <button id="btn-market-watch-ad" class="px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-md shadow-amber-600/30">
+            <i data-lucide="tv" class="w-4 h-4"></i> Earn +50 Points (Watch Ad)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simulated Reward Ad Video Modal -->
+    <div id="ad-reward-modal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl text-center relative overflow-hidden">
+        <!-- Progress Top Bar -->
+        <div class="absolute top-0 left-0 right-0 h-1 bg-slate-800">
+          <div id="ad-progress-bar" class="h-full bg-amber-500 w-0 transition-all duration-1000 ease-linear"></div>
+        </div>
+
+        <div class="w-16 h-16 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-amber-400 shadow-lg shadow-amber-500/20">
+          <i data-lucide="film" class="w-8 h-8"></i>
+        </div>
+
+        <h3 class="text-lg font-bold text-white mb-1">Sponsored Voicebank Partner</h3>
+        <p class="text-xs text-slate-400 mb-6">Watch this short message to earn <span class="text-amber-400 font-bold">+50 Voicebank Credits</span>!</p>
+
+        <!-- Mock Video Frame -->
+        <div class="h-44 bg-slate-950 border border-slate-800 rounded-xl mb-6 flex flex-col items-center justify-center relative overflow-hidden group">
+          <div class="absolute inset-0 bg-gradient-to-tr from-indigo-900/40 via-purple-900/20 to-slate-950"></div>
+          <i data-lucide="sparkles" class="w-10 h-10 text-amber-400 animate-pulse mb-2 z-10"></i>
+          <p class="text-xs text-slate-300 font-mono z-10 px-4">"Unlock unlimited UTAU voicebanks with Web Engine Pro!"</p>
+          <div class="mt-3 px-3 py-1 bg-amber-500 text-slate-950 font-bold text-[10px] rounded-full z-10 uppercase tracking-widest">
+            Ad Playing
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span id="ad-countdown-text" class="text-xs font-mono text-slate-400">Reward in 5s...</span>
+          <button id="btn-claim-ad-reward" disabled class="px-5 py-2 bg-slate-800 text-slate-500 font-bold text-xs rounded-lg transition opacity-50 cursor-not-allowed">
+            Claim Reward
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Note Quick Editor Context Modal -->
+<!-- ... existing code ... -->
+  <!-- Application Logic JS -->
+  <script>
+    // --- Application State ---
+    const STATE = {
+      bpm: 120,
+      quantize: 0.5, // 0.5 beats = 1/8 note
+      isPlaying: false,
+      playheadPosition: 0, // In beats
+      selectedNoteId: null,
+      notes: [],
+      userPoints: 100, // Points Economy System
+      unlockedVoicebankIds: ['default'],
+      voicebanks: [],
+      activeVoicebankId: 'default',
+      otoData: {}, // Oto parameters indexed by phoneme alias
+      audioBuffers: {}, // Loaded AudioBuffer instances for each sample
+      pitchRange: { min: 48, max: 84 }, // C3 (48) to C6 (84)
+      pixelsPerBeat: 64,
+      rowHeight: 24,
+      selectedOtoAlias: null
+    };
+
+    // Note Names array helper
+    const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+    // Audio Context initialization (Web Audio API)
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = new AudioContextClass();
+
+    // Default & Marketplace Voicebanks Catalogue
+    const MARKET_VOICEBANKS = [
+      {
+        id: 'default',
+        name: 'UTAU Default Vocaloid',
+        author: 'Web Synth Engine',
+        cost: 0,
+        avatar: 'https://placehold.co/80x80/6366f1/ffffff?text=UTAU',
+        description: 'Standard built-in continuous synth voicebank.'
+      },
+      {
+        id: 'ren_vivid',
+        name: 'Ren (Vivid English/JP)',
+        author: 'Voicebank Creator Community',
+        cost: 50,
+        avatar: 'https://placehold.co/80x80/ec4899/ffffff?text=REN',
+        description: 'Clear, crisp power voicebank with extended pitch dynamics.'
+      },
+      {
+        id: 'miku_synth',
+        name: 'Virtual Singer - Classic',
+        author: 'Vocal Lab Studios',
+        cost: 100,
+        avatar: 'https://placehold.co/80x80/10b981/ffffff?text=MIKU',
+        description: 'Iconic classic synthesis voicebank with smooth transitions.'
+      }
+    ];
+
+    // --- DOM Elements Cache ---
+    const DOM = {
+      pianoKeysCol: document.getElementById('piano-keys-column'),
+      gridViewport: document.getElementById('grid-viewport'),
+      gridRowsContainer: document.getElementById('grid-rows-container'),
+      notesLayer: document.getElementById('notes-layer'),
+      playhead: document.getElementById('playhead'),
+      rulerTicksContainer: document.getElementById('ruler-ticks-container'),
+      btnPlay: document.getElementById('btn-play'),
+      btnStop: document.getElementById('btn-stop'),
+      playIcon: document.getElementById('play-icon'),
+      bpmInput: document.getElementById('bpm-input'),
+      quantizeSelect: document.getElementById('quantize-select'),
+      btnToggleOto: document.getElementById('btn-toggle-oto'),
+      otoDrawer: document.getElementById('oto-editor-drawer'),
+      btnCloseOto: document.getElementById('btn-close-oto'),
+      otoPhonemeList: document.getElementById('oto-phoneme-list'),
+      otoCanvas: document.getElementById('oto-waveform-canvas'),
+      btnOpenVb: document.getElementById('btn-open-vb'),
+      vbModal: document.getElementById('vb-manager-modal'),
+      btnCloseVbModal: document.getElementById('btn-close-vb-modal'),
+      vbHeaderName: document.getElementById('vb-header-name'),
+      vbHeaderAvatar: document.getElementById('vb-header-avatar'),
+      vbModalName: document.getElementById('vb-modal-name'),
+      vbModalAuthor: document.getElementById('vb-modal-author'),
+      vbModalAvatar: document.getElementById('vb-modal-avatar'),
+      inputVbFiles: document.getElementById('input-vb-files'),
+      btnTriggerImport: document.getElementById('btn-trigger-import'),
+      btnExportVbPackage: document.getElementById('btn-export-vb-package'),
+      btnExportWav: document.getElementById('btn-export-wav'),
+      btnSaveProject: document.getElementById('btn-save-project'),
+      btnLoadProject: document.getElementById('btn-load-project'),
+      inputProjectFile: document.getElementById('input-project-file'),
+      noteDialog: document.getElementById('note-dialog'),
+      dialogLyric: document.getElementById('dialog-lyric'),
+      btnDialogSave: document.getElementById('btn-dialog-save'),
+      btnDialogCancel: document.getElementById('btn-dialog-cancel'),
+      // Points & Ad System DOM
+      userPointsDisplays: document.querySelectorAll('#user-points-display, .user-points-val'),
+      btnWatchAd: document.getElementById('btn-watch-ad'),
+      btnMarketWatchAd: document.getElementById('btn-market-watch-ad'),
+      adRewardModal: document.getElementById('ad-reward-modal'),
+      adProgressBar: document.getElementById('ad-progress-bar'),
+      adCountdownText: document.getElementById('ad-countdown-text'),
+      btnClaimAdReward: document.getElementById('btn-claim-ad-reward'),
+      vbListContainer: document.getElementById('vb-list-container')
+    };
+
+    // Update UI Points Counter
+    function updatePointsUI() {
+      DOM.userPointsDisplays.forEach(el => el.innerText = STATE.userPoints);
+    }
+
+    // Default built-in synthesized phonemes generator (fallback if no voicebank imported)
+    function generateSyntheticVoicebank() {
+      const phonemes = ['a', 'i', 'u', 'e', 'o', 'ka', 'ki', 'ku', 'ke', 'ko', 'sa', 'shi', 'su', 'se', 'so', 'ta', 'te', 'to', 'na', 'ni', 'nu', 'ne', 'no', 'ra', 'ri', 'ru', 're', 'ro'];
+      const sampleRate = audioCtx.sampleRate;
+
+      phonemes.forEach(alias => {
+        const duration = 1.2; // seconds
+        const buffer = audioCtx.createBuffer(1, sampleRate * duration, sampleRate);
+        const output = buffer.getChannelData(0);
+
+        // Formant synthesize simple vowel audio
+        const freqMap = { 'a': 800, 'i': 300, 'u': 400, 'e': 500, 'o': 450 };
+        const baseFreq = freqMap[alias.slice(-1)] || 440;
+
+        for (let i = 0; i < buffer.length; i++) {
+          const t = i / sampleRate;
+          let sample = Math.sin(2 * Math.PI * baseFreq * t) * 0.4 +
+                       Math.sin(2 * Math.PI * baseFreq * 2 * t) * 0.2 +
+                       Math.sin(2 * Math.PI * baseFreq * 3 * t) * 0.1;
+
+          if (alias.length > 1 && t < 0.08) {
+            sample += (Math.random() * 2 - 1) * 0.3;
+          }
+
+          const envelope = Math.exp(-t * 1.5);
+          output[i] = sample * envelope * 0.6;
+        }
+
+        STATE.audioBuffers[alias] = buffer;
+        STATE.otoData[alias] = {
+          file: `${alias}.wav`,
+          offset: 0,
+          consonant: 80,
+          cutoff: 0,
+          preutterance: 40,
+          overlap: 20
+        };
+      });
+
+      STATE.voicebanks = MARKET_VOICEBANKS;
+    }
+
+    // --- Points & Simulated Ad Reward System ---
+    let adTimer = null;
+
+    function openAdRewardModal() {
+      DOM.adRewardModal.classList.remove('hidden');
+      DOM.adProgressBar.style.width = '0%';
+      DOM.btnClaimAdReward.disabled = true;
+      DOM.btnClaimAdReward.classList.add('opacity-50', 'cursor-not-allowed');
+      DOM.btnClaimAdReward.classList.remove('bg-amber-500', 'hover:bg-amber-400', 'text-slate-950', 'shadow-lg');
+
+      let secondsLeft = 5;
+      DOM.adCountdownText.innerText = `Reward in ${secondsLeft}s...`;
+
+      // Animate progress bar over 5s
+      setTimeout(() => { DOM.adProgressBar.style.width = '100%'; }, 100);
+
+      adTimer = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft > 0) {
+          DOM.adCountdownText.innerText = `Reward in ${secondsLeft}s...`;
+        } else {
+          clearInterval(adTimer);
+          DOM.adCountdownText.innerText = 'Reward Ready!';
+          DOM.btnClaimAdReward.disabled = false;
+          DOM.btnClaimAdReward.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-800', 'text-slate-500');
+          DOM.btnClaimAdReward.classList.add('bg-amber-500', 'hover:bg-amber-400', 'text-slate-950', 'shadow-lg', 'shadow-amber-500/30');
+        }
+      }, 1000);
+    }
+
+    DOM.btnWatchAd.addEventListener('click', openAdRewardModal);
+    DOM.btnMarketWatchAd.addEventListener('click', openAdRewardModal);
+
+    DOM.btnClaimAdReward.addEventListener('click', () => {
+      STATE.userPoints += 50;
+      updatePointsUI();
+      DOM.adRewardModal.classList.add('hidden');
+      renderVoicebankMarketplace();
+    });
+
+    // --- Voicebank Marketplace & Selection UI ---
+    function renderVoicebankMarketplace() {
+      DOM.vbListContainer.innerHTML = '';
+
+      STATE.voicebanks.forEach(vb => {
+        const isUnlocked = STATE.unlockedVoicebankIds.includes(vb.id);
+        const isActive = STATE.activeVoicebankId === vb.id;
+
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-xl border flex items-center justify-between transition ${
+          isActive 
+            ? 'bg-indigo-600/10 border-indigo-500/50' 
+            : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center space-x-4">
+            <img src="${vb.avatar}" class="w-12 h-12 rounded-lg object-cover border border-slate-700">
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="font-bold text-sm text-slate-100">${vb.name}</h4>
+                ${isActive ? '<span class="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/30">Active</span>' : ''}
+              </div>
+              <p class="text-xs text-slate-400">${vb.description}</p>
+              <span class="text-[11px] text-slate-500 font-mono">${vb.author}</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            ${
+              isUnlocked 
+                ? `<button onclick="setActiveVoicebank('${vb.id}')" ${isActive ? 'disabled' : ''} class="px-4 py-2 ${isActive ? 'bg-slate-800 text-slate-500' : 'bg-indigo-600 hover:bg-indigo-500 text-white'} rounded-lg text-xs font-bold transition">
+                     ${isActive ? 'Selected' : 'Use Voicebank'}
+                   </button>`
+                : `<button onclick="unlockVoicebank('${vb.id}', ${vb.cost})" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition">
+                     <i data-lucide="lock" class="w-3.5 h-3.5"></i> Unlock (${vb.cost} PTS)
+                   </button>`
+            }
+          </div>
+        `;
+        DOM.vbListContainer.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    window.unlockVoicebank = function(vbId, cost) {
+      if (STATE.userPoints >= cost) {
+        STATE.userPoints -= cost;
+        STATE.unlockedVoicebankIds.push(vbId);
+        updatePointsUI();
+        setActiveVoicebank(vbId);
+      } else {
+        openAdRewardModal();
+      }
+    };
+
+    window.setActiveVoicebank = function(vbId) {
+      STATE.activeVoicebankId = vbId;
+      const vb = STATE.voicebanks.find(v => v.id === vbId);
+      if (vb) {
+        DOM.vbHeaderName.innerText = vb.name;
+        DOM.vbHeaderAvatar.src = vb.avatar;
+        DOM.vbModalName.innerText = vb.name;
+        DOM.vbModalAuthor.innerText = vb.author;
+        DOM.vbModalAvatar.src = vb.avatar;
+      }
+      renderVoicebankMarketplace();
+    };
+
+    // --- Package & Export Custom Voicebank ---
+    DOM.btnExportVbPackage.addEventListener('click', () => {
+      const activeVb = STATE.voicebanks.find(v => v.id === STATE.activeVoicebankId) || STATE.voicebanks[0];
+      const manifest = {
+        name: activeVb.name,
+        author: activeVb.author,
+        version: "1.0",
+        otoData: STATE.otoData
+      };
+
+      // Generate text oto.ini content
+      let otoLines = [];
+      Object.keys(STATE.otoData).forEach(alias => {
+        const o = STATE.otoData[alias];
+        otoLines.push(`${o.file}=${alias},${o.offset},${o.consonant},${o.cutoff},${o.preutterance},${o.overlap}`);
+      });
+
+      const vbPackage = {
+        manifest,
+        otoIniContent: otoLines.join('\n')
+      };
+
+      const blob = new Blob([JSON.stringify(vbPackage, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${activeVb.name.replace(/\s+/g, '_')}_Voicebank.json`;
+      a.click();
+    });
+
+    // --- Piano Roll Initialization ---
+<!-- ... existing code ... -->
+    // --- Application Boot Initialization ---
+    window.addEventListener('DOMContentLoaded', () => {
+      generateSyntheticVoicebank();
+      initPianoRollUI();
+      loadSampleNotes();
+      updatePointsUI();
+      renderVoicebankMarketplace();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
